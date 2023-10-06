@@ -1,0 +1,4 @@
+asgiref==3.7.2; python_version >= '3.7'
+django==4.2.6; python_version >= '3.8'
+python-dotenv==1.0.0; python_version >= '3.8'
+sqlparse==0.4.4; python_version >= '3.5'
