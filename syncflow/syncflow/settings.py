@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-from customer.stripe_utilities import CustomerCRUD
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_directory, '..', '..'))
@@ -33,8 +32,7 @@ SECRET_KEY = str(os.getenv('SECRET_KEY'))
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'b5b8-87-249-134-132.ngrok-free.app',
-    '127.0.0.1'
+
 ]
 
 
@@ -136,5 +134,10 @@ STATIC_URL = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STRIPE_API_KEY = str(os.getenv("STRIPE_API_KEY"))
+STRIPE_ENDPOINT_SECRET = str(os.getenv('STRIPE_ENDPOINT_SECRET'))
 
-CustomerCRUD.initialize(STRIPE_API_KEY)
+# Celary configurations
+CELERY_BROKER_URL = str(os.getenv('CELERY_BROKER_URL'))
+CELERY_RESULT_BACKEND = str(os.getenv('CELERY_RESULT_BACKEND'))
+
+

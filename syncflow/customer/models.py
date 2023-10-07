@@ -1,6 +1,10 @@
 from django.db import models
 import uuid
-from .stripe_utilities import CustomerCRUD
+from .stripe_utilities import StripeCustomerSubscriber
+from .utilities import Outsync
+
+from django.db import models
+import uuid
 
 class Customer(models.Model):
     id = models.UUIDField(
@@ -14,28 +18,50 @@ class Customer(models.Model):
 
     email = models.EmailField()
 
+    def get_params(self,instance=None, *args, **kwargs, ):
+        params = {}
+
+        for field in self._meta.fields:
+            field_name = field.name
+            value = getattr(self, field_name)
+            params[field_name] = value
+        return params
+
+    def get_updated_fields(self, *args, **kwargs):
+        original = Customer.objects.get(id=self.id)
+        updated_fields = {}
+        original_params = {}
+
+        for field in self._meta.fields:
+            field_name = field.name
+            old_value = getattr(original, field_name)
+            new_value = getattr(self, field_name)
+            if old_value != new_value:
+                updated_fields[field_name] = new_value
+
+            original_params[field_name] = old_value
+
+
+        return (original_params, updated_fields)
+
+
     def save(self, *args, **kwargs):
         if self.id is None:
             self.id = uuid.uuid4()
-            CustomerCRUD.create_customer(instance=self)
+            super().save(*args, **kwargs)
+            raw_params = self.get_params()
+            Outsync.create(raw_params=raw_params)
         else:
-            original = Customer.objects.get(id=self.id)
-            # Compare field values to detect updates
-            updated_fields = {}
-            for field in self._meta.fields:
-                field_name = field.name
-                old_value = getattr(original, field_name)
-                new_value = getattr(self, field_name)
+            original_params, updated_params = self.get_updated_fields()
+            super().save(*args, **kwargs)
 
-                if old_value != new_value:
-                    updated_fields[field_name] = new_value
-            # Do something with the updated_fields list (e.g., log or perform actions)
-            if updated_fields:
-                print("Updated fields:", updated_fields)
-            CustomerCRUD.update_customer(original_fields=original, updated_params = updated_fields)
-        super().save(*args, **kwargs)
+            Outsync.update(
+                original_params=original_params,
+                updated_params=updated_params
+            )
 
     def delete(self, *args, **kwargs):
-        CustomerCRUD.delete_customer(instance=self)
+        raw_params = self.get_params()
         super().delete(*args, **kwargs)
 
+        Outsync.delete(raw_params=raw_params)
