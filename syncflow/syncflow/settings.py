@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from customer.stripe_utilities import CustomerCRUD
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_directory, '..', '..'))
@@ -31,7 +32,10 @@ SECRET_KEY = str(os.getenv('SECRET_KEY'))
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'b5b8-87-249-134-132.ngrok-free.app',
+    '127.0.0.1'
+]
 
 
 # Application definition
@@ -130,3 +134,7 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+STRIPE_API_KEY = str(os.getenv("STRIPE_API_KEY"))
+
+CustomerCRUD.initialize(STRIPE_API_KEY)

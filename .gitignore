@@ -1,4 +1,5 @@
 Pipfile
 Pipfile.lock
-syncflow/syncflow/.env
+.env
 .vscode
+syncflow/db.sqlite3
