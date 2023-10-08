@@ -1,16 +1,17 @@
 import stripe
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from syncflow.settings import STRIPE_API_KEY,STRIPE_ENDPOINT_SECRET
+from syncflow.settings import STRIPE_ENDPOINT_SECRET
 from .models import Customer
 from .stripe_utilities import StripeCustomerSubscriber
-from .utilities import Insync
+from syncflow.utilities import Insync
 from .tasks import add
+from invoice.models import Invoice
+from invoice.stripe_invoice_utilities import StripeInvoiceSubscriber
 
 endpoint_secret = str(STRIPE_ENDPOINT_SECRET)
 
 def test(request):
-    add.delay(2,3)
     return HttpResponse(status=200)
 
 
@@ -27,7 +28,6 @@ def stripe_webhook(request):
     except ValueError as e:
         # Invalid request
         return HttpResponse(status=400)
-
     try:
         if event.type == 'customer.created':
             try:
@@ -35,7 +35,6 @@ def stripe_webhook(request):
             except Exception as e:
                 print('Error in stripe api data: {}'.format(str(e)))
                 return HttpResponse(status=400)
-
             try:
                 Customer.objects.get(**field_params)
                 print('Object already exists so ignore request')
@@ -46,12 +45,13 @@ def stripe_webhook(request):
             except Customer.DoesNotExist:
                 pass
 
+
             cust = Customer.objects.create(**field_params)
             cust.save()
 
             Insync.create(
                 raw_params=event.data.object,
-                unsubscribe=StripeCustomerSubscriber
+                unsubscribe=[StripeCustomerSubscriber]
             )
 
         elif event.type == 'customer.deleted':
@@ -71,7 +71,7 @@ def stripe_webhook(request):
             obj_to_delete.delete()
             Insync.delete(
                 raw_params=event.data.object,
-                unsubscribe=StripeCustomerSubscriber
+                unsubscribe=[StripeCustomerSubscriber]
             )
 
         elif event.type == 'customer.updated':
@@ -102,7 +102,6 @@ def stripe_webhook(request):
 
             # :TODO: Change it and make it inward sync with unsubscribed class
             try:
-                print(f"{old_field_params},{updated_field_params},{grouped_params}")
                 object_to_update = Customer.objects.get(**grouped_params)
             except Customer.DoesNotExist:
                 return HttpResponse(status=404)
@@ -111,15 +110,39 @@ def stripe_webhook(request):
                 return HttpResponse(status=404)
 
             for field, value in updated_field_params.items():
-                print(f"{field}:{type(field)},{value}:{type(value)}")
                 setattr(object_to_update,field,value)
             object_to_update.save()
 
             Insync.update(
                 raw_params=event.data.object,
-                unsubscribe=StripeCustomerSubscriber,
+                unsubscribe=[StripeCustomerSubscriber],
+            )
+        elif event.type == 'invoice.created':
+            params = event['data']['object']
+            params['id'] = event['data']['object']['id']
+
+            if Invoice.objects.filter(id=params['id']).exists():
+                return HttpResponse(status=200)
+
+            params = StripeInvoiceSubscriber.map_data_to_fields(params)
+
+            new_invoice = Invoice.objects.create(
+                **params
             )
 
+            new_invoice.save()
+
+        elif event.type == 'invoice.deleted':
+            id = event['data']['object']['id']
+
+            try:
+                obj_to_delete = Invoice.objects.get(id=id)
+            except Invoice.DoesNotExist:
+                obj_to_delete = None
+
+            if obj_to_delete:
+                # Delete the object
+                obj_to_delete.delete()
         return HttpResponse(status=200)
 
     except ValueError as e:

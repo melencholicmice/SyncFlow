@@ -34,7 +34,7 @@ SECRET_KEY = str(os.getenv('SECRET_KEY'))
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '5825-106-207-28-132.ngrok-free.app',
+    'c98f-14-139-194-106.ngrok-free.app',
     '127.0.0.1'
 ]
 
@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'customer',
+    'invoice',
     'django_celery_results',
 ]
 

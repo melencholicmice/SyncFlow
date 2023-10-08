@@ -1,16 +1,11 @@
 import stripe
-from .utilities import  register_subscriber, Outsync,Insync
+from syncflow.utilities import  register_subscriber, Outsync, SubscriberBase ,Insync
 from syncflow.settings import STRIPE_API_KEY
 from celery import shared_task
 import logging
 logger = logging.getLogger("default_logger")
-
-class SubscriberBase:
-    def __init__(self, name):
-        self.name = name  # Common attribute for all subscribers
-
-    def common_method(self):
-        print(f"Common method for {self.name} subscriber")
+from .models import Customer
+from django.http import HttpResponse
 
 
 
@@ -22,22 +17,6 @@ class StripeCustomerSubscriber(SubscriberBase):
         'email': 'email',
         'name': 'name',
     }
-
-    @classmethod
-    def map_data_to_fields(cls, data):
-        mapped_data = {}
-        for field, key in cls.field_to_key_mapping.items():
-            if key in data:
-                mapped_data[field] = data[key]
-        return mapped_data
-
-    @classmethod
-    def map_fields_to_data(cls, data):
-        mapped_data = {}
-        for field, key in cls.field_to_key_mapping.items():
-            if field in data:
-                mapped_data[key] = data[field]
-        return mapped_data
 
     @staticmethod
     @shared_task
@@ -129,3 +108,5 @@ class StripeCustomerSubscriber(SubscriberBase):
             logger.error(f"Error updating customer: {e}")
         except Exception as e:
             logger.error(f"Unexpected error updating customer: {e}")
+
+

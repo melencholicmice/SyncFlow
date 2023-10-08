@@ -1,6 +1,6 @@
 from django.db import models
 import uuid
-from .utilities import Outsync
+from syncflow.utilities import Outsync
 
 from django.db import models
 import uuid
