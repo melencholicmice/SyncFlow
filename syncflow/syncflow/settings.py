@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import logging
+
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_directory, '..', '..'))
@@ -32,7 +34,8 @@ SECRET_KEY = str(os.getenv('SECRET_KEY'))
 DEBUG = True
 
 ALLOWED_HOSTS = [
-
+    '5825-106-207-28-132.ngrok-free.app',
+    '127.0.0.1'
 ]
 
 
@@ -46,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'customer',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -89,6 +93,12 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'my_cache_table',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -133,11 +143,44 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',  # Adjust the log level as needed
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',  # Set a default log level for all loggers
+    },
+    'loggers': {
+        'default_logger': {  # Use the same name as the logger you created
+            'handlers': ['console'],
+            'level': 'DEBUG',  # Adjust the log level as needed
+            'propagate': False,
+        },
+    },
+}
+
+
+
 STRIPE_API_KEY = str(os.getenv("STRIPE_API_KEY"))
 STRIPE_ENDPOINT_SECRET = str(os.getenv('STRIPE_ENDPOINT_SECRET'))
 
 # Celary configurations
 CELERY_BROKER_URL = str(os.getenv('CELERY_BROKER_URL'))
 CELERY_RESULT_BACKEND = str(os.getenv('CELERY_RESULT_BACKEND'))
-
+# CELERY_RESULT_BACKEND = 'django-db'
+CELERY_IMPORTS = ('customer.tasks', )
+# CELERY_CACHE_BACKEND = 'db+sqlite:///results.db'
 

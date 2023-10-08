@@ -5,8 +5,14 @@ from syncflow.settings import STRIPE_API_KEY,STRIPE_ENDPOINT_SECRET
 from .models import Customer
 from .stripe_utilities import StripeCustomerSubscriber
 from .utilities import Insync
+from .tasks import add
 
 endpoint_secret = str(STRIPE_ENDPOINT_SECRET)
+
+def test(request):
+    add.delay(2,3)
+    return HttpResponse(status=200)
+
 
 @csrf_exempt
 def stripe_webhook(request):

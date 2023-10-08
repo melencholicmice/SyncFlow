@@ -1,8 +1,9 @@
 import stripe
-from django.http import HttpResponse
 from .utilities import  register_subscriber, Outsync,Insync
 from syncflow.settings import STRIPE_API_KEY
-from .tasks import push_to_queue
+from celery import shared_task
+import logging
+logger = logging.getLogger("default_logger")
 
 class SubscriberBase:
     def __init__(self, name):
@@ -11,11 +12,12 @@ class SubscriberBase:
     def common_method(self):
         print(f"Common method for {self.name} subscriber")
 
+
+
 @register_subscriber(main_class=Outsync)
 class StripeCustomerSubscriber(SubscriberBase):
-    API_KEY = STRIPE_API_KEY  # Class-level variable to store the API key
+    API_KEY = STRIPE_API_KEY
 
-    # Mapping between model fields and API data keys
     field_to_key_mapping = {
         'email': 'email',
         'name': 'name',
@@ -30,7 +32,7 @@ class StripeCustomerSubscriber(SubscriberBase):
         return mapped_data
 
     @classmethod
-    def map_fields_to_data(cls,data):
+    def map_fields_to_data(cls, data):
         mapped_data = {}
         for field, key in cls.field_to_key_mapping.items():
             if field in data:
@@ -38,114 +40,92 @@ class StripeCustomerSubscriber(SubscriberBase):
         return mapped_data
 
     @staticmethod
-    # @push_to_queue
+    @shared_task
     def create(**kwargs):
-        if StripeCustomerSubscriber.API_KEY is None:
-            raise ValueError("API key is not set. Call initialize() first.")
+        raw_params = kwargs.get('raw_params')
+        email = raw_params.get('email')
 
-        raw_params = kwargs['raw_params']
-        customer_params = StripeCustomerSubscriber.map_data_to_fields(data=raw_params)
-        customers = []
-        email = customer_params['email']
         try:
             customers = stripe.Customer.list(
                 email=email,
                 api_key=StripeCustomerSubscriber.API_KEY
             )
-        except Exception as e:
-            # :TODO: Handle the exception or add to a dead letter queue as needed
-            # :TODO: fix status codes
-            print(f"request rejected  because :- {e}")
-            return HttpResponse(status=400)
 
-        if len(customers) > 0:
-            # customer already exists
-            return HttpResponse(status=200)
+            if len(customers) > 0:
+                logger.info(f"Customer with email {email} already exists")
+                return
 
-        try:
+            customer_params = StripeCustomerSubscriber.map_data_to_fields(data=raw_params)
+
             stripe.Customer.create(
                 **customer_params,
                 api_key=StripeCustomerSubscriber.API_KEY
             )
-        except stripe.error.StripeError as e:
-            # Handle the error or log it as needed
-            print(f"Error because of stripe: {e}")
-            return HttpResponse(status=500)
-        except Exception as e:
-            print(f"Error creating customer: {e}")
-            return HttpResponse(status=500)
 
+            logger.info(f"Customer with email {email} created successfully")
+        except stripe.error.StripeError as e:
+            logger.error(f"Error creating customer: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error creating customer: {e}")
 
     @staticmethod
-    # @push_to_queue
+    @shared_task
     def delete(**kwargs):
-        if StripeCustomerSubscriber.API_KEY is None:
-            raise ValueError("API key is not set. Call initialize() first.")
+        raw_params = kwargs.get('raw_params')
+        email = raw_params.get('email')
 
-        raw_params = kwargs['raw_params']
-        customer_params = StripeCustomerSubscriber.map_data_to_fields(data=raw_params)
-
-        customers = []
-        email = customer_params['email']
         try:
             customers = stripe.Customer.list(
                 email=email,
                 api_key=StripeCustomerSubscriber.API_KEY
             )
+
+            if len(customers) == 0:
+                logger.info(f"Customer with email {email} does not exist")
+                return
+
             customer_id = customers['data'][0]['id']
-        except:
-            # Handle the exception or add to a dead letter queue as needed
-            #:TODO: fix status codes
-            return HttpResponse(status=400)
-
-        if len(customers) == 0:
-            return HttpResponse(status=200)
-
-
-        try:
             stripe.Customer.delete(
                 customer_id,
                 api_key=StripeCustomerSubscriber.API_KEY
             )
+
+            logger.info(f"Customer with email {email} deleted successfully")
         except stripe.error.StripeError as e:
-            # Handle the error or log it as needed
-            print(f"Error deleting customer: {e}")
-            return HttpResponse(status=500)
+            logger.error(f"Error deleting customer: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error deleting customer: {e}")
 
     @staticmethod
-    # @push_to_queue
+    @shared_task
     def update(**kwargs):
-        if StripeCustomerSubscriber.API_KEY is None:
-            raise ValueError("API key is not set. Call initialize() first.")
-        original_params = kwargs['original_params']
+        original_params = kwargs.get('original_params')
+        email = original_params.get('email')
 
-        email = original_params['email']
         try:
             customers = stripe.Customer.list(
                 email=email,
                 api_key=StripeCustomerSubscriber.API_KEY
             )
-        except Exception as e:
-            # :TODO: Handle the exception or add to a dead letter queue as needed
-            # :TODO: fix status codes
-            print(f"request rejected  because :- {e}")
-            return HttpResponse(status=500)
 
-        if not len(customers) == 1:
-            if len(customers) > 1:
-                return HttpResponse(status=200)
-            return HttpResponse(status=404)
+            if len(customers) != 1:
+                if len(customers) > 1:
+                    logger.warning(f"Multiple customers found with email {email}")
+                else:
+                    logger.warning(f"No customer found with email {email}")
+                return
 
-        customer_id = customers['data'][0]['id']
-        update_params = kwargs["updated_params"]
+            customer_id = customers['data'][0]['id']
+            update_params = kwargs.get('updated_params')
 
-
-        try:
             stripe.Customer.modify(
                 customer_id,
-                **update_params,  # Dictionary unpacking
+                **update_params,
                 api_key=StripeCustomerSubscriber.API_KEY
             )
+
+            logger.info(f"Customer with email {email} updated successfully")
         except stripe.error.StripeError as e:
-            # Handle the error or log it as needed
-            print(f"Error updating customer: {e}")
+            logger.error(f"Error updating customer: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error updating customer: {e}")

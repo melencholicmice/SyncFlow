@@ -1,6 +1,5 @@
 from django.db import models
 import uuid
-from .stripe_utilities import StripeCustomerSubscriber
 from .utilities import Outsync
 
 from django.db import models
