@@ -190,9 +190,9 @@ CELERY_RESULT_BACKEND = str(os.getenv('CELERY_RESULT_BACKEND'))
 CELERY_IMPORTS = ('customer.tasks', )
 
 # Celery Beat settings
-CELERY_BEAT_SCHEDULE = {
-    'hello-celery-task': {
-        'task': 'syncflow.customer.scheduled_task',
-        'schedule': timedelta(seconds=1),  # Set the schedule interval
-    },
-}
+# CELERY_BEAT_SCHEDULE = {
+#     # 'hello-celery-task': {
+#     #     'task': 'customer.tasks.scheduled_task',
+#     #     'schedule': timedelta(seconds=1),  # Set the schedule interval
+#     # },
+# }

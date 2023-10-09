@@ -8,6 +8,7 @@ def add(x, y):
     print("execution started...")
     time.sleep(10)
     return x + y
+
 @shared_task
 def scheduled_task():
     print("scheduled task running")

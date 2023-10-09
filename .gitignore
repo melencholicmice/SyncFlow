@@ -3,3 +3,4 @@ Pipfile.lock
 .env
 .vscode
 syncflow/db.sqlite3
+/syncflow/celerybeat-schedule
