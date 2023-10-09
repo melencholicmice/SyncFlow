@@ -73,6 +73,7 @@ def stripe_webhook(request):
                 raw_params=event.data.object,
                 unsubscribe=[StripeCustomerSubscriber]
             )
+            
 
         elif event.type == 'customer.updated':
             updated_field_params ={}
@@ -114,7 +115,8 @@ def stripe_webhook(request):
             object_to_update.save()
 
             Insync.update(
-                raw_params=event.data.object,
+                original_params=current_field_params,
+                updated_params=updated_field_params,
                 unsubscribe=[StripeCustomerSubscriber],
             )
         elif event.type == 'invoice.created':
@@ -129,12 +131,11 @@ def stripe_webhook(request):
             new_invoice = Invoice.objects.create(
                 **params
             )
-
             new_invoice.save()
 
         elif event.type == 'invoice.deleted':
             id = event['data']['object']['id']
-
+            print(f"this is the id ===> {id}")
             try:
                 obj_to_delete = Invoice.objects.get(id=id)
             except Invoice.DoesNotExist:
@@ -143,6 +144,7 @@ def stripe_webhook(request):
             if obj_to_delete:
                 # Delete the object
                 obj_to_delete.delete()
+                print("deleted")
         return HttpResponse(status=200)
 
     except ValueError as e:

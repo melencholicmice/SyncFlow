@@ -34,8 +34,7 @@ SECRET_KEY = str(os.getenv('SECRET_KEY'))
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'c98f-14-139-194-106.ngrok-free.app',
-    '127.0.0.1'
+    '*'  #:NOTE: Dont use this setting in production
 ]
 
 

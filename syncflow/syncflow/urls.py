@@ -16,8 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from customer.urls import customer_urls
-
+from invoice.urls import invoice_urls
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('customer/',include(customer_urls))
+    path('customer/',include(customer_urls)),
+    path('invoice/',include(invoice_urls))
 ]

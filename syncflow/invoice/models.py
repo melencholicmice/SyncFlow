@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger("default_logger")
 from syncflow.utilities import SubscriberBase
 from .stripe_invoice_utilities import InvoiceOutsync,StripeInvoiceSubscriber
-
+from uuid import uuid4
 # Create your models here.
 
 class Invoice(models.Model):
@@ -14,7 +14,11 @@ class Invoice(models.Model):
     id = models.CharField(
         primary_key=True,
         editable=False,
-        max_length=64
+        max_length=64,
+        # this is becuase if we want to access DB through django-admin cannot have primary key empty
+        # :NOTE: Default valude is a temparary solution
+        # :TODO: Find a permanant solution for this
+        default="something-that-cannot-be-id"
     )
 
     customer_name = models.CharField(
@@ -33,7 +37,7 @@ class Invoice(models.Model):
         return params
 
     def save(self, *args, **kwargs):
-        if self.id is None:
+        if self.id == "something-that-cannot-be-id":
             params = self.get_params()
             try:
                 customers = stripe.Customer.list(
@@ -41,29 +45,25 @@ class Invoice(models.Model):
                     api_key=STRIPE_API_KEY
                 )
 
-                if len(customers) > 0:
-                    logger.info(f"Customer with email {params['customer_email']} already exists")
+                if len(customers['data']) == 0:
+                    logger.error(f"Customer with email {params['customer_email']} doesnt exist")
+                    # :TODO: Find some way to show error message in admin pannel that invoice not saved
                     return
 
-                customer_params = SubscriberBase.map_data_to_fields(data=params)
+                cust_id = customers['data'][0]['id']
 
-                new_customer = stripe.Customer.create(
-                    **customer_params,
+                new_invoice = stripe.Invoice.create(
+                    customer=cust_id,
                     api_key=STRIPE_API_KEY
                 )
 
-                new_cust_id = new_customer['id']
-
-                self.id = new_cust_id
+                self.id = new_invoice['id']
                 super().save(*args, **kwargs)
-                customer_params['id'] = new_cust_id
 
                 InvoiceOutsync.create(
-                    raw_params=customer_params,
+                    raw_params=customers,
                     unsubscribe=[StripeInvoiceSubscriber]
                 )
-
-
             except stripe.error.StripeError as e:
                 logger.error(f"Error creating customer: {e}")
                 return
@@ -71,6 +71,7 @@ class Invoice(models.Model):
                 logger.error(f"Unexpected error creating customer: {e}")
                 return
         else:
+            print("exited")
             super().save(*args, **kwargs)
 
 
@@ -78,7 +79,6 @@ class Invoice(models.Model):
     def delete(self, *args, **kwargs):
         raw_params = self.get_params()
         super().delete(*args, **kwargs)
-
         InvoiceOutsync.delete(raw_params=raw_params)
 
 
