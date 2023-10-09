@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 import logging
+from datetime import timedelta
 
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -188,3 +189,10 @@ CELERY_BROKER_URL = str(os.getenv('CELERY_BROKER_URL'))
 CELERY_RESULT_BACKEND = str(os.getenv('CELERY_RESULT_BACKEND'))
 CELERY_IMPORTS = ('customer.tasks', )
 
+# Celery Beat settings
+CELERY_BEAT_SCHEDULE = {
+    'hello-celery-task': {
+        'task': 'syncflow.customer.scheduled_task',
+        'schedule': timedelta(seconds=1),  # Set the schedule interval
+    },
+}
