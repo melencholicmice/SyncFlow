@@ -4,21 +4,23 @@ from customer.models import Customer
 from syncflow.settings import STRIPE_API_KEY
 import logging
 logger = logging.getLogger("default_logger")
-from syncflow.utilities import SubscriberBase
+from syncflow.sync_framework import SubscriberBase
 from .stripe_invoice_utilities import InvoiceOutsync,StripeInvoiceSubscriber
 from uuid import uuid4
 # Create your models here.
 
 class Invoice(models.Model):
 
+    '''
+        default value is becuase if we cannot access DB through django-admin with primary key empty
+        :NOTE: Default value is a temparary solution
+        :TODO: Find a better solution for this
+    '''
     id = models.CharField(
         primary_key=True,
         editable=False,
         max_length=64,
-        # this is becuase if we want to access DB through django-admin cannot have primary key empty
-        # :NOTE: Default valude is a temparary solution
-        # :TODO: Find a permanant solution for this
-        default="something-that-cannot-be-id"
+         default="something-that-cannot-be-id"
     )
 
     customer_name = models.CharField(

@@ -1,14 +1,25 @@
-# Decorator for registering subscriber classes
 import logging
 
 logger = logging.getLogger('default_logger')
 
+'''
+- Decorator for registering subscriber classes in a main_class
+- Easy way to add any class to subscriber list
+- pass the class to which you want to subscribe our class to in decorator argument (@main_call)
+
+    @register_subscriber(main_class=MainClass)
+    class SubscriberClass:
+'''
 def register_subscriber(main_class):
     def decorator(subscriber_class):
+        # Register the subscriber class with the main class
         main_class.register(subscriber_class)
         return subscriber_class
     return decorator
 
+'''
+- Subscriber Base class to provide utilities to common to all subscribers
+'''
 class SubscriberBase:
     def __init__(self, name):
         self.name = name  # Common attribute for all subscribers
@@ -18,6 +29,9 @@ class SubscriberBase:
 
     @classmethod
     def map_data_to_fields(cls, data):
+        '''
+            convert data recived from API to django model recognisable
+        '''
         mapped_data = {}
         for field, key in cls.field_to_key_mapping.items():
             if key in data:
@@ -26,29 +40,37 @@ class SubscriberBase:
 
     @classmethod
     def map_fields_to_data(cls, data):
+        '''
+            convert data recived from django model to external API recogisable
+        '''
         mapped_data = {}
         for field, key in cls.field_to_key_mapping.items():
             if field in data:
                 mapped_data[key] = data[field]
         return mapped_data
 
-# main function of this meta class is to maintian a list of subscribe classes
+'''
+- meta class for Main class that stores list of subscriber class and provides utlities to call all the subscribed class
+- has standard create,delete and update functionality that can be overidden
+'''
 class MainClassMeta(type):
     subscribers = []
 
     def register(cls, subscriber_class):
+        # Register a subscriber class with the main class
         cls.subscribers.append(subscriber_class)
 
     @classmethod
     def call_subscriber_method(cls, method_name, *args, **kwargs):
-        unsubscribe = []
-
-        try:
-            kwargs.get('unsubscribe')
-        except:
-            pass
+        """
+            Calls only the subscribed classes methods and ignores others
+            put classes that you want to unsubscribe in an array and pass it
+            also pushes those function into queue that have @shared_task decorator in it
+        """
+        unsubscribe = kwargs.get('unsubscribe', [])
 
         def is_shared_task(method):
+            # Check if a method is a shared task
             return hasattr(method, 'delay') if callable(method) else False
 
         for subscriber_class in cls.subscribers:
@@ -63,7 +85,7 @@ class MainClassMeta(type):
                 try:
                     # Push the shared task to the Celery queue
                     task_result = method.delay(*args, **kwargs)
-                    # You can handle the task result here or return it
+                    # Handle the task result as needed
                 except Exception as e:
                     # Handle exceptions (e.g., log or add to a dead letter queue)
                     print(f"Error queuing shared task: {e}")
@@ -74,18 +96,41 @@ class MainClassMeta(type):
 
     @classmethod
     def create(cls, raw_params, unsubscribe=None):
+        # Call the 'create' method for subscribers
         cls.call_subscriber_method('create', raw_params=raw_params, unsubscribe=unsubscribe)
 
     @classmethod
     def update(cls, original_params, updated_params, unsubscribe=None):
+        # Call the 'update' method for subscribers
         cls.call_subscriber_method('update', original_params=original_params, updated_params=updated_params, unsubscribe=unsubscribe)
 
     @classmethod
     def delete(cls, raw_params, unsubscribe=None):
+        # Call the 'delete' method for subscribers
         cls.call_subscriber_method('delete', raw_params=raw_params, unsubscribe=unsubscribe)
 
+
+"""
+List of available MainClasses (MainClasses are classes that stores)
+
+:NOTE: here two classes (one to handle inwards sync and other for outwards sync)
+- They are created on the basis of functionality and can be further modified as pper requirements
+- although you can use only one class to handle both insync and out sync but not recommended as it might cause confusion
+"""
+
+# MainClass responsibe for inwards syncing of customer data
 class Insync(metaclass=MainClassMeta):
     pass
 
+# MainClass responsibe for outwards syncing of customer data
 class Outsync(metaclass=MainClassMeta):
     pass
+# MainClass responsibe for inwards syncing of invoice data
+class InvoiceInsync(metaclass=MainClassMeta):
+    pass
+
+# MainClass responsibe for outwards syncing of invoice data
+class InvoiceOutsync(metaclass=MainClassMeta):
+    pass
+
+

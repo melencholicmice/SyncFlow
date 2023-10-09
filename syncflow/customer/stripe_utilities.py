@@ -1,5 +1,5 @@
 import stripe
-from syncflow.utilities import  register_subscriber, Outsync, SubscriberBase ,Insync
+from syncflow.sync_framework import  register_subscriber, Outsync, SubscriberBase ,Insync
 from syncflow.settings import STRIPE_API_KEY
 from celery import shared_task
 import logging

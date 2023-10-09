@@ -15,12 +15,11 @@ app = Celery('syncflow')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Load task modules from all registered Django apps.
+# :NOTE: Every time you use shared_task make sure to add file info here
 app.autodiscover_tasks([
     'customer.tasks',
     'customer.stripe_utilities'
 ])
 
 
-# @app.task(bind=True, ignore_result=True)
-# def debug_task(self):
-#     print(f'Request: {self.request!r}')
+

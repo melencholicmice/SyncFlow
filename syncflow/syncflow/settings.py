@@ -145,32 +145,38 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+
+    'disable_existing_loggers': False,  # Do not disabling any existing loggers.
+
     'formatters': {
         'verbose': {
             'format': '{levelname} {asctime} {module} {message}',
             'style': '{',
         },
     },
+
     'handlers': {
         'console': {
-            'level': 'DEBUG',  # Adjust the log level as needed
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+            'level': 'DEBUG',  # setting the level of detail for log messages to be very detailed (DEBUG).
+            'class': 'logging.StreamHandler',  # sending log messages to the console (your terminal).
+            'formatter': 'verbose',  # using a detailed format for log messages.
         },
     },
+
     'root': {
-        'handlers': ['console'],
-        'level': 'INFO',  # Set a default log level for all loggers
+        'handlers': ['console'],  # using the console handler for all log messages.
+        'level': 'INFO',  # By default, we're showing less detailed log messages (INFO level) on the console.
     },
+
     'loggers': {
-        'default_logger': {  # Use the same name as the logger you created
-            'handlers': ['console'],
-            'level': 'DEBUG',  # Adjust the log level as needed
-            'propagate': False,
+        'default_logger': {
+            'handlers': ['console'],  # We're also using the console handler for a specific logger called 'default_logger'.
+            'level': 'DEBUG',  # For this logger, we're showing very detailed log messages (DEBUG) on the console.
+            'propagate': False,  # We're not passing these log messages to other loggers.
         },
     },
 }
+
 
 
 
@@ -180,7 +186,5 @@ STRIPE_ENDPOINT_SECRET = str(os.getenv('STRIPE_ENDPOINT_SECRET'))
 # Celary configurations
 CELERY_BROKER_URL = str(os.getenv('CELERY_BROKER_URL'))
 CELERY_RESULT_BACKEND = str(os.getenv('CELERY_RESULT_BACKEND'))
-# CELERY_RESULT_BACKEND = 'django-db'
 CELERY_IMPORTS = ('customer.tasks', )
-# CELERY_CACHE_BACKEND = 'db+sqlite:///results.db'
 
