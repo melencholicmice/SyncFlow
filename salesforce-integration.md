@@ -1,4 +1,3 @@
-Absolutely, here's the Salesforce integration plan for our Django-based Syncflow application, including Python code snippets:
 
 ## Detailed Plan for Salesforce Integration
 
@@ -55,21 +54,16 @@ Absolutely, here's the Salesforce integration plan for our Django-based Syncflow
 
 4. **Validation and Unsubscription:**
    - To prevent infinite loops, I'll validate that we aren't saving an already saved object.
-   - Temporarily, I'll unsubscribe the `SalesforceCustomerSubscriber` class to avoid unnecessary API calls.
+   -When our origin is Salesforce itself then  I'll unsubscribe the `SalesforceCustomerSubscriber` class to avoid unnecessary API calls.
 
 ### Part 3: Error Handling and Security
 
 1. **Error Handling:**
    - I'll implement error handling within our webhook code to manage issues such as network errors, invalid payloads, or endpoint unavailability.
-   - We'll consider sending events that aren't handled correctly to a dead letter queue for further analysis.
+   - We'll consider sending events that aren't handled correctly to a dead letter queue for further analysis.This can be done easily as in celery we have access to result objects.
 
 2. **Logging:**
-   - I'll make sure to maintain detailed logs for each webhook interaction, including successful syncs and any errors encountered. Proper logging is essential for debugging and auditing.
+   - I'll make sure to maintain detailed logs for each webhook interaction, including successful syncs and any errors encountered. Proper logging is essential for debugging and auditing.for this I will use `logging` library.
 
 3. **Security:**
-   - I'll ensure that our webhook endpoint is secure and protected against unauthorized access. If necessary, we'll use authentication mechanisms like API keys.
-
-
-## Summary
-
-This comprehensive plan outlines the detailed steps for integrating Salesforce APIs into our Django-based Syncflow application. It covers both outgoing and incoming data synchronization, error handling, and security considerations. By following these steps, we can effectively integrate Salesforce with our internal system, ensuring smooth data flow and efficient synchronization.
+   - I'll ensure that our webhook endpoint is secure and protected against unauthorized access. If necessary, we'll use authentication mechanisms like only data from django applications will be accepted by using `ALLOWED_HOST` settings.
