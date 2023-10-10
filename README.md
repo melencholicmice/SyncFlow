@@ -1,10 +1,24 @@
 # 🚀 SyncFlow
+![syncflow diagram (1)](https://github.com/melencholicmice/Reverberance2022/assets/109169835/7a053298-5ff8-476b-ac90-f8b1880abb20)
 
 Welcome to the Syncflow, a powerful tool for synchronizing data with external services effortlessly!
 
+## TechStack Used
+- Python
+- Django (Django ORM to communicatite with DB, Web framework to accept webhook data)
+
+- Rabbit MQ (As message queue between celery(consumer) and django(producer))
+- Reddis (As a backend result storage)
+- celery ( to spawn workers and as consumer for rabbitMQ )
+- celery-beat (for API polling and periodic task scheduling, !not required if no periodic task scheduling exists)
+- [optional] flower (Web interface) to monitor celery tasks
+
 ## Features
-- ✅ Data Synchronization with External Services
-- 🐍 Powered by Django
+- Integrate with one connect with all
+- ✅ Easy Framework for Data Synchronization with External Services
+- Removes repetive tasks so that you can focous on Integration only.
+- High Fault Tolerance using RabbitMQ and Reddis
+- Fast Performance using celery
 
 ## Content
 
@@ -86,7 +100,3 @@ You can access the Flower dashboard at `http://localhost:5555`.
 
 That's it! Your Django app with Celery, RabbitMQ, and Redis is up and running. You can now use Celery to perform background tasks and monitor their progress if needed.
 
-## Usage
-- Configure your data synchronization settings in `settings.py`.
-- Create Django models for the data you want to sync.
-- Implement synchronization logic in your Django views or management commands.

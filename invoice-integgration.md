@@ -1,6 +1,6 @@
 ## Integration Plan for Catalog Integration 📦
 
-**Process Overview**
+**Generalized Process for Catalog Integration** 🚀
 
 1. **Define Catalog Structure** 🏗️
    - Determine the structure of the catalog, including the required fields and their data types.
@@ -8,19 +8,19 @@
 
 2. **Function Overriding** 🔄
    - Implement function overriding to extract data from the catalog table and pass it to the MainClass.
-   - In the future, aim to streamline this process for even greater efficiency.
+   - Aim to automate or abstract this step for greater efficiency in the future.
 
 3. **Create Subscriber Class** 🧑‍💻
    - Inherit from the `SubscriberBase` class and leverage the `MainClassMeta` metaclass for ease of implementation.
    - Customize the Subscriber class to align with your specific catalog integration requirements.
-   - Additional functionality can be added via function overriding as needed.
+   - Additional functionality can be added via function overriding and polymorphism as needed.
 
 4. **Set Up Data Synchronization** 🔄🔄
    - Decide on the method for data synchronization between the catalog and external systems (InSync).
    - Consider options like API polling or webhooks based on your system's needs.
    - Implement necessary data validation to prevent errors, duplicates, and infinite loops.
 
-**General Workflow**
+**General Workflow** 🔄
 
 1. **Catalog Creation** 🏗️
    - Create the catalog table in your database, defining the fields required for storing catalog data.
@@ -44,4 +44,4 @@
    - Determine the approach for inward data synchronization, either via API polling or webhooks.
    - Apply rigorous data validation to maintain data integrity and avoid errors.
 
-This structured plan should help you smoothly integrate your catalog into the Syncflow framework. With a well-organized approach and a touch of emojis, you'll be ready to go! 🚀
+This structured plan should help you smoothly integrate any catalog into the Syncflow framework. ✨

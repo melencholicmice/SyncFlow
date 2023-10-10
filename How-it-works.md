@@ -1,46 +1,40 @@
 ## Syncflow 🌐
 
-- **Syncflow acts as an intermediary**, acting as a bridge between external systems and our internal database. 🌉
+- **Syncflow acts as an intermediary**, acting as a bridge between external systems and our internal database 🌉.
+- **No point of contact between two external system** ,The idea is to let syncflow do  all the communication needed between all systems to syncronise.
+- **Lot of Utility Classes**, syncflow has many utility class that can directly be inherited which will helps in various task needed for syncronisation.
 
 ## Synchronization Types 🔄
 
-- **Inwards Synchronization**: When changes occur in external systems, our goal is to promptly update our internal database and all other relevant systems.
+- **Inwards Synchronization**: When changes occur in external systems, our goal is to update our internal database and all other relevant systems `(ALL external system - system  from which changes occured)`.
 
-- **Outwards Synchronization**: If data within our internal database undergoes changes, we need to efficiently communicate and propagate these changes to external systems.
-
-## The Solution at a Glance 🌟
-
-Within our synchronization solution:
-
-- We eliminate the need for direct communication between external systems. 🚫
-- When a change transpires in an external system, it directly communicates this change to our internal system.
-- Our internal system takes charge, ensuring that the change is synchronized with all other systems, excluding the one where the change originated.
-- If an alteration occurs within our internal system, we proactively communicate it to every external system. 🚀
-
-This approach streamlines the synchronization process, guaranteeing that changes are accurately reflected across all systems, all while minimizing the complexity of direct communication between external systems. 🌐
+- **Outwards Synchronization**: If data within our internal database undergoes changes, we need to efficiently communicate and propagate these changes to **ALL** external systems.
 
 ## Implementation Insights 🧩
 
 ### The Orchestra Model: Keeping it in Harmony 🎶
 
-Our synchronization model draws inspiration from a music orchestra, comprising two essential components:
+Our synchronization model is similar to a music orchestra, comprising two essential components:
 
 #### The MainClass: The Conductor 🎩
 
 - The MainClass orchestrates data synchronization, strategically deciding when and how data should flow between systems. 🎶
 - It manages a list of SubscriberClasses and controls when to call their methods. 📋
+- We can easily pass an unsubscribe array in mainclass to stop data flow to certain systems.
 
 #### The Subscribers: The Musicians 🎻
 
-- Subscriber Classes are tasked with specific synchronization responsibilities. 🎵
+- Subscriber Classes are tasked with specific synchronization responsibilities (CRUD or more) and validation. 🎵
 - They adeptly handle updates from external systems (Inwards Sync) or facilitate data exchange with external systems (Outwards Sync). 🎼
+- `SubscriberBaseClass` aims to provide all the general utility to help in writing code for syncronisation logic.
+- A subscriber class keeps a `field_to_data` mapping with a database table.
 
 ## Key Advantages of Our Approach ✨
 
-- **Adaptability**: Integrating new systems is a breeze. Create a Subscriber class, register it with the MainClass, and let automation handle the rest.
-- **Simplicity**: Bid farewell to intricate connections between systems.
+- **Adaptability**: Integrating new systems is very easy. Create a Subscriber class, register it with the MainClass, and let automation handle the rest.
+- **Simplicity**: No need for complex data flows.
 - **Efficiency**: Data moves seamlessly and expeditiously.
-- **Control**: Oversee everything seamlessly from a central hub.
+- **Control**: Oversee everything seamlessly from a central hub (Django admin + flower web interface).
 
 ### Inward Data Synchronization Strategies 📊
 
@@ -55,7 +49,7 @@ This can be achieved through two distinct methods, depending on the system:
 #### Webhooks 🌐
 
 - Alternatively, we can actively listen to webhooks from external services.
-- Django provides an API endpoint where POST requests can be elegantly handled within `views.py`. Here, the code defines the actions taken when webhooks are received, while the MainClass and other Subscriber Classes manage the rest of the process.
+- We can define an API endpoint where POST requests can be elegantly handled within `views.py`. Here, the code defines the actions taken when webhooks are received, while the MainClass and other Subscriber Classes manage the rest of the process.
 
 ### Vulnerability and its Solution 🛡️
 
@@ -75,3 +69,10 @@ This approach offers several benefits:
 - **Asynchronous Processing**: Message queues enable asynchronous communication, reducing system bottlenecks and enhancing overall performance. 🚀
 
 By implementing message queues, we significantly enhance the reliability and fault tolerance of our synchronization system, safeguarding against single points of failure. 🌐🚀
+
+## Other Pages
+- [Local Setup](#local-setup)
+- [How this works](./How-it-works.md)
+- [SalesForce syncronisation](./salesforce-integration.md)
+- [Extending syncronisation to other catalouge](./invoice-integgration.md)
+
