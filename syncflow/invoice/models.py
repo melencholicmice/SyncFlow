@@ -73,7 +73,6 @@ class Invoice(models.Model):
                 logger.error(f"Unexpected error creating customer: {e}")
                 return
         else:
-            print("exited")
             super().save(*args, **kwargs)
 
 

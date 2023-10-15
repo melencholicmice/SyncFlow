@@ -1,5 +1,5 @@
 import stripe
-from syncflow.sync_framework import  register_subscriber,MainClassMeta,SubscriberBase
+from syncflow.sync_framework import  register_subscriber,SubscriberBase
 from syncflow.settings import STRIPE_API_KEY
 from celery import shared_task
 import logging
@@ -31,18 +31,20 @@ class StripeInvoiceSubscriber(SubscriberBase):
             logger.error(f"Error creating Invoice: {e}")
         except Exception as e:
             logger.error(f"Unexpected error creating Invoice: {e}")
+
     @staticmethod
     @shared_task
     def delete(**kwargs):
         raw_params = kwargs.get('raw_params')
         invoice_id = raw_params.get('id')
-
+        print(invoice_id)
         try:
             stripe.Invoice.delete(invoice_id)
+            print("tried deleting")
         except stripe.error.StripeError as e:
-            logger.error(f"Error updating customer: {e}")
+            logger.error(f"Error deleting customer: {e}")
         except Exception as e:
-            logger.error(f"Unexpected error updating customer: {e}")
+            logger.error(f"Unexpected error deleting customer: {e}")
 
 
 

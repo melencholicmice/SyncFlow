@@ -1,5 +1,6 @@
-from django.db import models
+import json
 import uuid
+from django.db import models
 from syncflow.sync_framework import Outsync
 
 
@@ -25,7 +26,13 @@ class Customer(models.Model):
         for field in self._meta.fields:
             field_name = field.name
             value = getattr(self, field_name)
+
+            if isinstance(value, uuid.UUID):
+            # Convert UUID to a string to avoid error in serialisation
+                value = str(value)
+
             params[field_name] = value
+
         return params
 
     def get_updated_fields(self, *args, **kwargs):

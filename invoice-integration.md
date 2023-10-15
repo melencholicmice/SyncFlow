@@ -8,7 +8,7 @@
 
 2. **Function Overriding** 🔄
    - Implement function overriding to extract data from the catalog table and pass it to the MainClass.
-   - Aim to automate or abstract this step for greater efficiency in the future.
+   - I plan to automate or abstract this step for greater efficiency in the future.
 
 3. **Create Subscriber Class** 🧑‍💻
    - Inherit from the `SubscriberBase` class and leverage the `MainClassMeta` metaclass for ease of implementation.

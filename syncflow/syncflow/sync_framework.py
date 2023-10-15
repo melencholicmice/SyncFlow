@@ -67,7 +67,9 @@ class MainClassMeta(type):
             put classes that you want to unsubscribe in an array and pass it
             also pushes those function into queue that have @shared_task decorator in it
         """
-        unsubscribe = kwargs.get('unsubscribe', [])
+        unsubscribe = kwargs.get('unsubscribe')
+        if unsubscribe is None:
+            unsubscribe = []
 
         def is_shared_task(method):
             # Check if a method is a shared task
@@ -88,10 +90,10 @@ class MainClassMeta(type):
                     # Handle the task result as needed
                 except Exception as e:
                     # Handle exceptions (e.g., log or add to a dead letter queue)
-                    print(f"Error queuing shared task: {e}")
+                    logger.error(f"Error queuing shared task: {e}")
             else:
                 # Not a shared task, so just execute the function
-                print(f"Called without shared {method}")
+                logger.info(f"Called without shared {method}")
                 method(*args, **kwargs)
 
     @classmethod

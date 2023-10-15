@@ -71,8 +71,10 @@ def stripe_webhook(request):
             try:
                 obj_to_delete = Customer.objects.get(**field_params)
             except Customer.DoesNotExist:
+                logger.error("No such customer exists")
                 return HttpResponse(status=404)
             except Customer.MultipleObjectsReturned:
+                logger.error("Incomplete data, multiple objects of the same type exist")
                 objects = Customer.objects.filter(**field_params)
                 for obj in objects:
                     obj.delete()
@@ -110,23 +112,27 @@ def stripe_webhook(request):
                 return HttpResponse(status=200)
 
             try:
-                object_to_update = Customer.objects.get(**current_field_params)
+                object_to_update = Customer.objects.get(**old_field_params)
             except Customer.DoesNotExist:
+                logger.error("No such customer exists")
                 return HttpResponse(status=404)
             except Customer.MultipleObjectsReturned:
                 logger.error("Incomplete data, multiple objects of the same type exist")
                 return HttpResponse(status=404)
 
+            # Trigger an inward synchronization
+            Insync.update(
+                original_params=previous_params,
+                updated_params=updated_field_params,
+                unsubscribe=[StripeCustomerSubscriber],
+            )
+
             for field, value in updated_field_params.items():
                 setattr(object_to_update, field, value)
             object_to_update.save()
 
-            # Trigger an inward synchronization
-            Insync.update(
-                original_params=current_field_params,
-                updated_params=updated_field_params,
-                unsubscribe=[StripeCustomerSubscriber],
-            )
+            print(current_field_params)
+            print(updated_field_params)
 
         elif event.type == 'invoice.created':
             params = event['data']['object']
