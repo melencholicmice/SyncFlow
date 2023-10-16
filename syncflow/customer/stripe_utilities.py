@@ -10,6 +10,7 @@ from django.http import HttpResponse
 
 
 @register_subscriber(main_class=Outsync)
+@register_subscriber(main_class=Insync)
 class StripeCustomerSubscriber(SubscriberBase):
     API_KEY = STRIPE_API_KEY
 

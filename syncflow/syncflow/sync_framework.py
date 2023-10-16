@@ -12,6 +12,7 @@ logger = logging.getLogger('default_logger')
 '''
 def register_subscriber(main_class):
     def decorator(subscriber_class):
+        print("Registering class")
         # Register the subscriber class with the main class
         main_class.register(subscriber_class)
         return subscriber_class
@@ -50,15 +51,20 @@ class SubscriberBase:
         return mapped_data
 
 '''
-- meta class for Main class that stores list of subscriber class and provides utlities to call all the subscribed class
-- has standard create,delete and update functionality that can be overidden
+- meta class for Main class that stores list of subscriber
 '''
 class MainClassMeta(type):
-    subscribers = []
 
-    def register(cls, subscriber_class):
-        # Register a subscriber class with the main class
-        cls.subscribers.append(subscriber_class)
+    def __init__(cls, name, bases, attrs):
+        super().__init__(name, bases, attrs)
+        cls.subscribers = []  # Create a subscribers list for each class
+
+class MainClass(metaclass=MainClassMeta):
+    '''
+    Main class and provides utlities to call all the subscribed class
+    - has standard create,delete and update functionality that can be overidden
+    - had a register method to add classes to its list
+    '''
 
     @classmethod
     def call_subscriber_method(cls, method_name, *args, **kwargs):
@@ -96,19 +102,26 @@ class MainClassMeta(type):
                 logger.info(f"Called without shared {method}")
                 method(*args, **kwargs)
 
+
+    @classmethod
+    def register(cls, subscriber_class):
+        # Register a subscriber class with the main class
+        cls.subscribers.append(subscriber_class)
+
+
     @classmethod
     def create(cls, raw_params, unsubscribe=None):
-        # Call the 'create' method for subscribers
+        # Call the 'create' method for subscribers associated with this main class
         cls.call_subscriber_method('create', raw_params=raw_params, unsubscribe=unsubscribe)
 
     @classmethod
     def update(cls, original_params, updated_params, unsubscribe=None):
-        # Call the 'update' method for subscribers
+        # Call the 'update' method for subscribers associated with this main class
         cls.call_subscriber_method('update', original_params=original_params, updated_params=updated_params, unsubscribe=unsubscribe)
 
     @classmethod
     def delete(cls, raw_params, unsubscribe=None):
-        # Call the 'delete' method for subscribers
+        # Call the 'delete' method for subscribers associated with this main class
         cls.call_subscriber_method('delete', raw_params=raw_params, unsubscribe=unsubscribe)
 
 
@@ -121,18 +134,18 @@ List of available MainClasses (MainClasses are classes that stores)
 """
 
 # MainClass responsibe for inwards syncing of customer data
-class Insync(metaclass=MainClassMeta):
+class Insync(MainClass):
     pass
 
 # MainClass responsibe for outwards syncing of customer data
-class Outsync(metaclass=MainClassMeta):
+class Outsync(MainClass):
     pass
 # MainClass responsibe for inwards syncing of invoice data
-class InvoiceInsync(metaclass=MainClassMeta):
+class InvoiceInsync(MainClass):
     pass
 
 # MainClass responsibe for outwards syncing of invoice data
-class InvoiceOutsync(metaclass=MainClassMeta):
+class InvoiceOutsync(MainClass):
     pass
 
 

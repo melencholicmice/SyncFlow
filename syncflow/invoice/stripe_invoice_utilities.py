@@ -4,10 +4,11 @@ from syncflow.settings import STRIPE_API_KEY
 from celery import shared_task
 import logging
 logger = logging.getLogger("default_logger")
-from syncflow.sync_framework import InvoiceOutsync
+from syncflow.sync_framework import InvoiceOutsync,InvoiceInsync
 
 
 @register_subscriber(main_class=InvoiceOutsync)
+@register_subscriber(main_class=InvoiceInsync)
 class StripeInvoiceSubscriber(SubscriberBase):
     API_KEY = STRIPE_API_KEY
 
